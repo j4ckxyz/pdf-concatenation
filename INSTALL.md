@@ -54,6 +54,25 @@ The tool automatically detects which mode to use:
 - If `./input` folder exists → Uses dedicated folder mode (cleans up)
 - If no `./input` folder → Uses current directory mode (preserves PDFs)
 
+## Updating (Standard Workflow)
+
+Update using the standard Git CLI flow:
+
+```bash
+cd ~/pdf-concatenation
+git pull --ff-only
+bun install
+```
+
+Or run the helper script:
+
+```bash
+cd ~/pdf-concatenation
+bun run update
+```
+
+Because `bun link` creates a symlink, updating the repo updates `pdfconc` globally without relinking.
+
 ## Quick Examples
 
 ### Example 1: Merge PDFs in current directory (keep originals)

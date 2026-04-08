@@ -9,7 +9,8 @@
   },
   "scripts": {
     "test": "bun test",
-    "generate-samples": "bun generate-samples.ts"
+    "generate-samples": "bun generate-samples.ts",
+    "update": "bun scripts/update.ts"
   },
   "keywords": ["pdf", "concatenate", "merge", "cli", "bun", "tui"],
   "author": "j4ckxyz",

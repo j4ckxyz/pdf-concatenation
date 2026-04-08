@@ -39,6 +39,36 @@ cd pdf-concatenation
 bun install
 ```
 
+## Updating
+
+Use the standard Git-based CLI update flow:
+
+```bash
+# Navigate to the installation directory
+cd path/to/pdf-concatenation
+
+# Pull latest changes
+git pull --ff-only
+
+# Reinstall dependencies (if any new ones)
+bun install
+
+# The global 'pdfconc' command is automatically updated!
+```
+
+Or use the built-in update script:
+
+```bash
+# From anywhere, if you're in the repo directory
+bun run update
+
+# Or navigate to the repo first
+cd ~/pdf-concatenation
+bun run update
+```
+
+You only need to run `bun link` once at initial install. Because Bun links this repo into your global bin, `git pull` updates the installed CLI immediately.
+
 ## Usage
 
 The tool has **two working modes**:
