@@ -20,43 +20,65 @@ bun link
 
 ## Usage
 
-Once installed, you can use `pdfconc` from any directory:
+Once installed, `pdfconc` works in **two modes**:
+
+### Mode 1: Current Directory (Preserves PDFs)
+
+```bash
+# Navigate to directory with PDFs
+cd ~/Documents/invoices
+
+# Run pdfconc - it will use PDFs in current directory
+pdfconc
+
+# PDFs are merged but NOT deleted!
+```
+
+### Mode 2: Dedicated Folder (Cleans Up)
 
 ```bash
 # Navigate to your working directory
 cd ~/Documents/my-project
 
-# Run pdfconc
+# Create input folder and add PDFs
+mkdir input
+cp ~/Downloads/*.pdf input/
+
+# Run pdfconc - it will use PDFs from ./input
 pdfconc
+
+# PDFs are merged and ./input is cleaned up
 ```
 
-The tool will:
-1. Create an `./input` directory if it doesn't exist
-2. Wait for you to add PDF files to `./input`
-3. Show a TUI to enter the output filename
-4. Concatenate PDFs intelligently by filename similarity
-5. Save the merged PDF to `./output`
-6. Clean up the `./input` directory
+The tool automatically detects which mode to use:
+- If `./input` folder exists → Uses dedicated folder mode (cleans up)
+- If no `./input` folder → Uses current directory mode (preserves PDFs)
 
-## Quick Example
+## Quick Examples
+
+### Example 1: Merge PDFs in current directory (keep originals)
 
 ```bash
-# Create a test directory
-mkdir ~/test-pdfs && cd ~/test-pdfs
+cd ~/Documents/reports
+# (directory has: report1.pdf, report2.pdf, report3.pdf)
 
-# Run pdfconc (it will create ./input directory)
 pdfconc
+# Enter filename: "combined-reports"
+# Result: ./output/combined-reports.pdf
+# Originals: KEPT in current directory
+```
 
-# Add some PDFs to ./input
-cp ~/Downloads/*.pdf ./input/
+### Example 2: Merge PDFs from input folder (cleanup)
 
-# Run pdfconc again
+```bash
+mkdir ~/project && cd ~/project
+mkdir input
+cp ~/Downloads/*.pdf input/
+
 pdfconc
-
-# Enter your desired filename in the TUI
-# Press Enter
-
-# Your merged PDF will be in ./output!
+# Enter filename: "merged"
+# Result: ./output/merged.pdf
+# Originals: DELETED from ./input
 ```
 
 ## Uninstall

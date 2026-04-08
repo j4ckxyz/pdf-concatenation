@@ -1,15 +1,17 @@
 # PDF Concatenation Tool - Visual Guide
 
-## TUI Interface
+## Two Working Modes
 
-When you run `bun index.ts`, you'll see a beautiful terminal interface:
+### Mode 1: Current Directory (Preserves PDFs)
+When you run `pdfconc` in a directory with PDF files but no `./input` folder:
 
 ```
 ┌────────────────────────────────────────────────────────────┐
 │                                                            │
 │  PDF Concatenation Tool                                   │
 │                                                            │
-│  Found 6 PDF file(s) in ./input                          │
+│  Found 6 PDF file(s)                                      │
+│  PDFs from current directory (will NOT be deleted)       │
 │  PDFs will be merged by filename relevancy               │
 │                                                            │
 │  Enter output filename:                                   │
@@ -23,7 +25,87 @@ When you run `bun index.ts`, you'll see a beautiful terminal interface:
 └────────────────────────────────────────────────────────────┘
 ```
 
-## Example Usage
+### Mode 2: Dedicated Folder (Cleans Up)
+When you run `pdfconc` with an `./input` folder:
+
+```
+┌────────────────────────────────────────────────────────────┐
+│                                                            │
+│  PDF Concatenation Tool                                   │
+│                                                            │
+│  Found 6 PDF file(s)                                      │
+│  PDFs from ./input (will be cleaned up)                  │
+│  PDFs will be merged by filename relevancy               │
+│                                                            │
+│  Enter output filename:                                   │
+│                                                            │
+│  ┌──────────────────────────────────────────────────────┐ │
+│  │ [Your filename here]                                 │ │
+│  └──────────────────────────────────────────────────────┘ │
+│                                                            │
+│  Press Enter to continue, Ctrl+C to cancel               │
+│                                                            │
+└────────────────────────────────────────────────────────────┘
+```
+
+## Example Usage - Current Directory Mode
+
+### Step 1: Navigate to directory with PDFs
+```bash
+$ cd ~/Documents/invoices
+$ ls
+invoice-january-2024.pdf
+invoice-february-2024.pdf
+invoice-march-2024.pdf
+```
+
+### Step 2: Run pdfconc
+```bash
+$ pdfconc
+```
+
+### Step 3: Enter filename in TUI
+Type your desired filename (e.g., "all-invoices") and press Enter.
+
+### Step 4: Results
+```
+============================================================
+Starting PDF concatenation...
+============================================================
+
+Processing PDFs in order:
+  1. invoice-january-2024.pdf
+  2. invoice-february-2024.pdf
+  3. invoice-march-2024.pdf
+  ✓ Added 2 page(s) from invoice-january-2024.pdf
+  ✓ Added 2 page(s) from invoice-february-2024.pdf
+  ✓ Added 1 page(s) from invoice-march-2024.pdf
+
+✓ Created merged PDF: ./output/all-invoices.pdf
+  Total pages: 5
+
+✓ Source PDFs preserved in current directory
+
+============================================================
+Success! PDF concatenation complete.
+============================================================
+
+Output: ./output/all-invoices.pdf
+```
+
+### Step 5: Check your files
+```bash
+$ ls
+invoice-january-2024.pdf    # STILL HERE
+invoice-february-2024.pdf   # STILL HERE
+invoice-march-2024.pdf      # STILL HERE
+output/                     # NEW
+
+$ ls output/
+all-invoices.pdf           # MERGED PDF
+```
+
+## Example Usage - Dedicated Folder Mode
 
 ### Step 1: Add PDFs to input directory
 ```bash
@@ -36,9 +118,9 @@ annual-report-2024.pdf
 meeting-notes-q1.pdf
 ```
 
-### Step 2: Run the tool
+### Step 2: Run pdfconc
 ```bash
-$ bun index.ts
+$ pdfconc
 ```
 
 ### Step 3: Enter filename in TUI

@@ -104,7 +104,7 @@ async function concatenatePDFs(inputDir: string, outputPath: string): Promise<vo
 }
 
 /**
- * Clean up input directory
+ * Clean up input directory (only when using dedicated input/output folder structure)
  */
 async function cleanupInputDirectory(inputDir: string): Promise<void> {
   const files = await Array.fromAsync(new Bun.Glob('*.pdf').scan(inputDir));
@@ -118,32 +118,54 @@ async function cleanupInputDirectory(inputDir: string): Promise<void> {
 }
 
 async function main() {
-  // Get current working directory
   const cwd = process.cwd();
-  const inputDir = `${cwd}/${INPUT_DIR}`;
-  const outputDir = `${cwd}/${OUTPUT_DIR}`;
-
-  // Check if input directory exists
-  const inputDirExists = await Bun.file(inputDir).exists();
-  if (!inputDirExists) {
-    console.log(`No ${INPUT_DIR} directory found in current directory.`);
-    console.log(`Creating ${INPUT_DIR} directory...`);
-    await Bun.$`mkdir -p ${inputDir}`;
-    console.log(`\nPlease add PDF files to ${inputDir} and run pdfconc again.`);
-    process.exit(0);
+  
+  // Check if dedicated input directory exists
+  const inputDirPath = `${cwd}/${INPUT_DIR}`;
+  const inputDirExists = await Bun.file(inputDirPath).exists();
+  
+  let sourceDir: string;
+  let shouldCleanup: boolean;
+  let workingMode: string;
+  
+  if (inputDirExists) {
+    // Mode 1: Using dedicated input/output folders
+    sourceDir = inputDirPath;
+    shouldCleanup = true;
+    workingMode = "dedicated folders";
+  } else {
+    // Mode 2: Using current directory for PDFs
+    sourceDir = cwd;
+    shouldCleanup = false;
+    workingMode = "current directory";
   }
 
-  // Check for PDFs
-  const pdfFiles = await Array.fromAsync(new Bun.Glob('*.pdf').scan(inputDir));
+  // Check for PDFs in the source directory
+  const pdfFiles = await Array.fromAsync(new Bun.Glob('*.pdf').scan(sourceDir));
   
   if (pdfFiles.length === 0) {
-    console.log(`No PDF files found in ${inputDir}`);
-    console.log("Please add PDF files and run pdfconc again");
+    if (workingMode === "current directory") {
+      console.log("No PDF files found in current directory.");
+      console.log("\nYou can either:");
+      console.log(`  1. Add PDF files to this directory and run 'pdfconc' again`);
+      console.log(`  2. Create an ${INPUT_DIR} folder, add PDFs there, and run 'pdfconc'`);
+    } else {
+      console.log(`No PDF files found in ${inputDirPath}`);
+      console.log("Please add PDF files and run pdfconc again");
+    }
     process.exit(1);
   }
 
-  console.log(`Found ${pdfFiles.length} PDF file(s) in ${inputDir}:\n`);
+  // Show which mode we're in
+  console.log(`Mode: ${workingMode}`);
+  console.log(`Found ${pdfFiles.length} PDF file(s)${workingMode === "current directory" ? " in current directory" : ` in ${INPUT_DIR}`}:\n`);
   pdfFiles.forEach((file, i) => console.log(`  ${i + 1}. ${file}`));
+  
+  if (workingMode === "current directory") {
+    console.log(`\n⚠️  PDFs will NOT be deleted after merging (working in current directory)`);
+  } else {
+    console.log(`\n✓ PDFs will be moved to archive after merging`);
+  }
   console.log("");
 
   // Create TUI to get output filename
@@ -166,6 +188,10 @@ async function main() {
     },
   });
 
+  const modeText = workingMode === "current directory" 
+    ? "PDFs from current directory (will NOT be deleted)"
+    : `PDFs from ${INPUT_DIR} (will be cleaned up)`;
+
   renderer.root.add(
     Box(
       {
@@ -179,8 +205,12 @@ async function main() {
         bold: true,
       }),
       Text({
-        content: `Found ${pdfFiles.length} PDF file(s) in ${inputDir}`,
+        content: `Found ${pdfFiles.length} PDF file(s)`,
         fg: "#FFFF00",
+      }),
+      Text({
+        content: modeText,
+        fg: workingMode === "current directory" ? "#FF8800" : "#00FFFF",
       }),
       Text({
         content: "PDFs will be merged by filename relevancy",
@@ -219,7 +249,8 @@ async function main() {
     outputFilename += '.pdf';
   }
 
-  // Create output directory if it doesn't exist
+  // Create output directory
+  const outputDir = `${cwd}/${OUTPUT_DIR}`;
   await Bun.$`mkdir -p ${outputDir}`;
 
   const outputPath = `${outputDir}/${outputFilename}`;
@@ -229,12 +260,19 @@ async function main() {
   console.log("=".repeat(60));
 
   try {
-    await concatenatePDFs(inputDir, outputPath);
-    await cleanupInputDirectory(inputDir);
+    await concatenatePDFs(sourceDir, outputPath);
+    
+    // Only cleanup if using dedicated input folder
+    if (shouldCleanup) {
+      await cleanupInputDirectory(sourceDir);
+    } else {
+      console.log(`\n✓ Source PDFs preserved in current directory`);
+    }
 
     console.log("\n" + "=".repeat(60));
     console.log("Success! PDF concatenation complete.");
     console.log("=".repeat(60));
+    console.log(`\nOutput: ${outputPath}`);
   } catch (error) {
     console.error("\nError:", error);
     process.exit(1);

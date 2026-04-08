@@ -7,7 +7,9 @@ A powerful CLI tool built with Bun that concatenates multiple PDF files into a s
 - **Smart Sorting**: PDFs are grouped by filename relevancy using a similarity algorithm
 - **Multi-page Support**: Preserves all pages from each PDF in the correct order
 - **Interactive TUI**: Beautiful terminal UI built with OpenTUI for entering the output filename
-- **Auto Cleanup**: Automatically removes processed PDFs from the input directory
+- **Two Working Modes**: 
+  - **Current Directory Mode**: Works with PDFs in your current folder (preserves originals)
+  - **Dedicated Folder Mode**: Uses `./input` folder (cleans up after merging)
 - **Fast**: Built with Bun for maximum performance
 - **Well Tested**: Comprehensive test suite included
 
@@ -39,20 +41,48 @@ bun install
 
 ## Usage
 
-### Global Command (After `bun link`)
+The tool has **two working modes**:
+
+### Mode 1: Current Directory (Preserves PDFs)
+
+Use this when you have PDFs in your current directory that you want to keep:
 
 ```bash
-# Navigate to any directory
-cd ~/Documents/my-pdfs
+# Navigate to directory with PDFs
+cd ~/Documents/invoices
+
+# Run pdfconc (PDFs will NOT be deleted)
+pdfconc
+```
+
+The tool will:
+- Find all PDFs in current directory
+- Merge them by filename relevancy
+- Save to `./output/<filename>.pdf`
+- **Keep original PDFs** (they are NOT deleted)
+
+### Mode 2: Dedicated Folder (Cleans Up)
+
+Use this for a clean workflow where source PDFs are removed after merging:
+
+```bash
+# Create input folder
+mkdir input
+
+# Add PDFs to input folder
+cp ~/Downloads/*.pdf input/
 
 # Run pdfconc
 pdfconc
-
-# Add PDFs to the ./input directory that was created
-# Run pdfconc again and follow the TUI prompts
 ```
 
-### Local Usage
+The tool will:
+- Find all PDFs in `./input`
+- Merge them by filename relevancy  
+- Save to `./output/<filename>.pdf`
+- **Delete PDFs from `./input`** (cleanup after merge)
+
+### Local Usage (Development)
 
 ### 1. Add PDF files to the input directory
 
@@ -70,12 +100,12 @@ bun index.ts
 ```
 
 The tool will:
-1. Detect all PDF files in `./input`
+1. Detect PDF files (in `./input` or current directory)
 2. Show you a beautiful TUI to enter the output filename
 3. Sort PDFs by filename relevancy
 4. Concatenate them into a single PDF
 5. Save the result to `./output/<your-filename>.pdf`
-6. Clean up all PDFs from `./input`
+6. Clean up source PDFs (only if using `./input` folder)
 
 ### 3. Find your merged PDF
 
