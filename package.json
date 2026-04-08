@@ -1,0 +1,31 @@
+{
+  "name": "pdf-concatenation",
+  "version": "1.0.0",
+  "description": "CLI tool to concatenate PDF files with smart filename-based sorting",
+  "module": "index.ts",
+  "type": "module",
+  "bin": {
+    "pdfconc": "./bin/pdfconc.ts"
+  },
+  "scripts": {
+    "test": "bun test",
+    "generate-samples": "bun generate-samples.ts"
+  },
+  "keywords": ["pdf", "concatenate", "merge", "cli", "bun", "tui"],
+  "author": "j4ckxyz",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/j4ckxyz/pdf-concatenation.git"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@opentui/core": "^0.1.97",
+    "pdf-lib": "^1.17.1"
+  }
+}
