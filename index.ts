@@ -31,8 +31,8 @@ async function main() {
     border: true,
     borderStyle: "rounded",
     width: 60,
-    onSubmit: (value: string) => {
-      outputFilename = value.trim();
+    onSubmit: () => {
+      outputFilename = String(inputComponent.value ?? "").trim();
       isSubmitted = true;
       renderer.destroy();
     },
@@ -70,6 +70,8 @@ async function main() {
       })
     )
   );
+
+  inputComponent.focus();
 
   // Wait for user to submit
   await new Promise<void>((resolve) => {
