@@ -1,6 +1,6 @@
 {
   "name": "pdf-concatenation",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CLI tool to concatenate PDF files with smart filename-based sorting",
   "module": "index.ts",
   "type": "module",

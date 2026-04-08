@@ -71,6 +71,18 @@ You only need to run `bun link` once at initial install. Because Bun links this 
 
 ## Usage
 
+### CLI Flags
+
+```bash
+pdfconc --help
+pdfconc --version
+pdfconc --no-tui
+```
+
+- `-h, --help`: show usage help
+- `-v, --version`: print CLI version
+- `--no-tui`: use plain prompt mode (helpful if terminal key handling is flaky)
+
 The tool has **two working modes**:
 
 ### Mode 1: Current Directory (Preserves PDFs)
@@ -83,6 +95,9 @@ cd ~/Documents/invoices
 
 # Run pdfconc (PDFs will NOT be deleted)
 pdfconc
+
+# If Enter key is unreliable in your terminal, use fallback prompt mode
+pdfconc --no-tui
 ```
 
 The tool will:

@@ -4,6 +4,38 @@ import { PDFDocument } from "pdf-lib";
 
 const INPUT_DIR = "./input";
 const OUTPUT_DIR = "./output";
+const CLI_VERSION = "1.0.1";
+
+interface CliOptions {
+  help: boolean;
+  version: boolean;
+  noTui: boolean;
+}
+
+function parseCliArgs(argv: string[]): CliOptions {
+  return {
+    help: argv.includes("-h") || argv.includes("--help"),
+    version: argv.includes("-v") || argv.includes("--version"),
+    noTui: argv.includes("--no-tui"),
+  };
+}
+
+function printHelp(): void {
+  console.log(`pdfconc ${CLI_VERSION}`);
+  console.log("Merge PDF files by filename relevancy.");
+  console.log("");
+  console.log("Usage:");
+  console.log("  pdfconc [options]");
+  console.log("");
+  console.log("Options:");
+  console.log("  -h, --help       Show help");
+  console.log("  -v, --version    Show version");
+  console.log("  --no-tui         Use plain text prompt instead of TUI");
+  console.log("");
+  console.log("Modes:");
+  console.log("  - If ./input exists: uses ./input and deletes processed PDFs from ./input");
+  console.log("  - If ./input does not exist: uses current directory and preserves PDFs");
+}
 
 /**
  * Calculates similarity between two filenames based on common words
@@ -117,7 +149,130 @@ async function cleanupInputDirectory(inputDir: string): Promise<void> {
   console.log(`\n✓ Cleaned up ${files.length} PDF file(s) from ${inputDir}`);
 }
 
+async function promptOutputFilename(
+  pdfCount: number,
+  modeText: string,
+  useTui: boolean,
+): Promise<string> {
+  if (!useTui || !process.stdin.isTTY || !process.stdout.isTTY) {
+    const value = prompt("Enter output filename (without .pdf extension):")?.trim() ?? "";
+    if (!value) {
+      throw new Error("No filename provided");
+    }
+    return value;
+  }
+
+  const renderer = await createCliRenderer({
+    exitOnCtrlC: true,
+  });
+
+  const inputComponent = Input({
+    placeholder: "Enter output filename (without .pdf extension)",
+    border: true,
+    borderStyle: "rounded",
+    width: 60,
+  });
+
+  renderer.root.add(
+    Box(
+      {
+        flexDirection: "column",
+        gap: 1,
+        padding: 2,
+      },
+      Text({
+        content: "PDF Concatenation Tool",
+        fg: "#00FF00",
+        bold: true,
+      }),
+      Text({
+        content: `Found ${pdfCount} PDF file(s)`,
+        fg: "#FFFF00",
+      }),
+      Text({
+        content: modeText,
+        fg: modeText.includes("NOT") ? "#FF8800" : "#00FFFF",
+      }),
+      Text({
+        content: "PDFs will be merged by filename relevancy",
+      }),
+      Box({ height: 1 }),
+      Text({
+        content: "Enter output filename:",
+        fg: "#00FFFF",
+      }),
+      inputComponent,
+      Box({ height: 1 }),
+      Text({
+        content: "Press Enter to continue, Ctrl+C to cancel",
+        fg: "#888888",
+      }),
+    ),
+  );
+
+  inputComponent.focus();
+
+  return await new Promise<string>((resolve, reject) => {
+    let done = false;
+
+    const finish = (value: string) => {
+      if (done) {
+        return;
+      }
+      done = true;
+      renderer.keyInput.off("keypress", onKeyPress);
+      renderer.destroy();
+      resolve(value);
+    };
+
+    const fail = (message: string) => {
+      if (done) {
+        return;
+      }
+      done = true;
+      renderer.keyInput.off("keypress", onKeyPress);
+      renderer.destroy();
+      reject(new Error(message));
+    };
+
+    const submit = () => {
+      const value = String(inputComponent.value ?? "").trim();
+      if (!value) {
+        return;
+      }
+      finish(value);
+    };
+
+    const onKeyPress = (key: { name?: string; ctrl?: boolean; sequence?: string }) => {
+      const isEnter = key.name === "return" || key.name === "enter" || key.name === "linefeed" || key.sequence === "\r" || key.sequence === "\n";
+      if (isEnter) {
+        submit();
+        return;
+      }
+
+      if (key.ctrl && key.name === "c") {
+        fail("Cancelled by user");
+      }
+    };
+
+    inputComponent.onSubmit = () => submit();
+    renderer.keyInput.on("keypress", onKeyPress);
+  });
+}
+
 async function main() {
+  const args = parseCliArgs(process.argv.slice(2));
+
+  if (args.help) {
+    printHelp();
+    process.exit(0);
+  }
+
+  if (args.version) {
+    console.log(CLI_VERSION);
+    process.exit(0);
+  }
+
   const cwd = process.cwd();
   
   // Check if dedicated input directory exists
@@ -168,81 +323,16 @@ async function main() {
   }
   console.log("");
 
-  // Create TUI to get output filename
-  const renderer = await createCliRenderer({
-    exitOnCtrlC: true,
-  });
-
-  let outputFilename = "";
-  let isSubmitted = false;
-
-  const inputComponent = Input({
-    placeholder: "Enter output filename (without .pdf extension)",
-    border: true,
-    borderStyle: "rounded",
-    width: 60,
-    onSubmit: () => {
-      outputFilename = String(inputComponent.value ?? "").trim();
-      isSubmitted = true;
-      renderer.destroy();
-    },
-  });
-
   const modeText = workingMode === "current directory" 
     ? "PDFs from current directory (will NOT be deleted)"
     : `PDFs from ${INPUT_DIR} (will be cleaned up)`;
 
-  renderer.root.add(
-    Box(
-      {
-        flexDirection: "column",
-        gap: 1,
-        padding: 2,
-      },
-      Text({
-        content: "PDF Concatenation Tool",
-        fg: "#00FF00",
-        bold: true,
-      }),
-      Text({
-        content: `Found ${pdfFiles.length} PDF file(s)`,
-        fg: "#FFFF00",
-      }),
-      Text({
-        content: modeText,
-        fg: workingMode === "current directory" ? "#FF8800" : "#00FFFF",
-      }),
-      Text({
-        content: "PDFs will be merged by filename relevancy",
-      }),
-      Box({ height: 1 }),
-      Text({
-        content: "Enter output filename:",
-        fg: "#00FFFF",
-      }),
-      inputComponent,
-      Box({ height: 1 }),
-      Text({
-        content: "Press Enter to continue, Ctrl+C to cancel",
-        fg: "#888888",
-      })
-    )
-  );
-
-  inputComponent.focus();
-
-  // Wait for submission
-  await new Promise<void>((resolve) => {
-    const checkInterval = setInterval(() => {
-      if (isSubmitted) {
-        clearInterval(checkInterval);
-        resolve();
-      }
-    }, 100);
-  });
-
-  if (!outputFilename) {
-    console.log("\nNo filename provided. Exiting.");
+  let outputFilename = "";
+  try {
+    outputFilename = await promptOutputFilename(pdfFiles.length, modeText, !args.noTui);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.log(`\n${message}. Exiting.`);
     process.exit(1);
   }
 
