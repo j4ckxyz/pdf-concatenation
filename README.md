@@ -13,11 +13,46 @@ A powerful CLI tool built with Bun that concatenates multiple PDF files into a s
 
 ## Installation
 
+### Global Installation (Recommended)
+
+Install `pdfconc` globally to use it from any directory:
+
 ```bash
+# Clone and install
+git clone https://github.com/j4ckxyz/pdf-concatenation.git
+cd pdf-concatenation
+bun install
+bun link
+
+# Now use 'pdfconc' from anywhere!
+cd ~/Documents/my-project
+pdfconc
+```
+
+### Local Installation
+
+```bash
+git clone https://github.com/j4ckxyz/pdf-concatenation.git
+cd pdf-concatenation
 bun install
 ```
 
 ## Usage
+
+### Global Command (After `bun link`)
+
+```bash
+# Navigate to any directory
+cd ~/Documents/my-pdfs
+
+# Run pdfconc
+pdfconc
+
+# Add PDFs to the ./input directory that was created
+# Run pdfconc again and follow the TUI prompts
+```
+
+### Local Usage
 
 ### 1. Add PDF files to the input directory
 
